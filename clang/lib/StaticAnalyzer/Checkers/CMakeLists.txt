@@ -11,6 +11,7 @@ add_clang_library(clangStaticAnalyzerCheckers
   BasicObjCFoundationChecks.cpp
   BlockInCriticalSectionChecker.cpp
   BoolAssignmentChecker.cpp
+  BranchConditionExtractor.cpp
   BuiltinFunctionChecker.cpp
   CStringChecker.cpp
   CStringSyntaxChecker.cpp

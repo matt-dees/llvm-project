@@ -990,6 +990,11 @@ def GenericTaintChecker : Checker<"TaintPropagation">,
   ]>,
   Documentation<HasAlphaDocumentation>;
 
+def BranchConditionExtractor : Checker<"BranchConditionExtractor">,
+  HelpText<"Extracts branch conditions of tainted values.">,
+  Documentation<NotDocumented>,
+  Hidden;
+
 } // end "alpha.security.taint"
 
 //===----------------------------------------------------------------------===//
