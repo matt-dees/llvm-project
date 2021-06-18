@@ -1,42 +1,48 @@
+#include "Taint.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
-#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
-#include "Taint.h"
 
 using namespace clang;
 using namespace ento;
 
 namespace {
-  class BranchConditionExtractor : public Checker<check::BranchCondition, check::BeginFunction> {
+class BranchConditionExtractor
+    : public Checker<check::BranchCondition, check::BeginFunction,
+                     check::EndFunction> {
 
-  public:
-    void checkBranchCondition(const Stmt *Condition, CheckerContext &Ctx) const;
-    void checkBeginFunction(CheckerContext &Ctx) const;
-
-  };
+public:
+  void checkBranchCondition(const Stmt *Condition, CheckerContext &Ctx) const;
+  void checkBeginFunction(CheckerContext &Ctx) const;
+  void checkEndFunction(const ReturnStmt *RS, CheckerContext &C) const;
+};
 } // end anonymous namespace
 
 void BranchConditionExtractor::checkBranchCondition(const Stmt *Condition,
                                                     CheckerContext &Ctx) const {
-
 }
 
 void BranchConditionExtractor::checkBeginFunction(CheckerContext &Ctx) const {
   const LocationContext *LCtx = Ctx.getLocationContext();
-  const auto * FD = dyn_cast_or_null<FunctionDecl>(LCtx->getDecl());
+  const auto *FD = dyn_cast_or_null<FunctionDecl>(LCtx->getDecl());
   if (!FD) {
     return;
   }
+}
 
-  // TODO: These function names should be read in from some source.
-  if (FD->getIdentifier()->getName() != "foo") {
-    return;
+void BranchConditionExtractor::checkEndFunction(const ReturnStmt *RS,
+                                                CheckerContext &Ctx) const {
+  const LocationContext *LCtx = Ctx.getLocationContext();
+  const auto *FD = dyn_cast_or_null<FunctionDecl>(LCtx->getDecl());
+  llvm::outs() << "[" << FD->getIdentifier()->getName() << "]"
+               << "\n";
+  auto State = Ctx.getState();
+  auto ConstraintMap = getConstraintMap(State);
+  for (auto E : ConstraintMap) {
+    E.first->dumpToStream(llvm::outs());
+    E.second.print(llvm::outs());
   }
-
-  // TODO: The parameter index should not be hardcoded.
-  if (FD->getParamDecl(0)) {}
-
-
+  llvm::outs() << "\n";
 }
 
 void ento::registerBranchConditionExtractor(CheckerManager &mgr) {
